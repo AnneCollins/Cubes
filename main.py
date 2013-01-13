@@ -2,6 +2,10 @@
 import json
 import sys
 
+class Direction(object):
+    CLOCKWISE = 0
+    COUNTER = 1
+
 class Shape(object):
     def __init__(self, x):
         print "Construct!"
@@ -18,3 +22,4 @@ def main(args):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
+
