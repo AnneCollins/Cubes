@@ -115,7 +115,7 @@ def main(args):
     # HACK!
     turns = [(-1)**i for i in range(N-1)]
     conf = s.configuration(turns)
-    draw.draw_configuration(conf)
+    draw.draw_configuration(conf, rectangle)
 
 
 if __name__ == "__main__":
