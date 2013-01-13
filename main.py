@@ -2,18 +2,18 @@
 import json
 import sys
 
-class Shape(object):
-    def __init__(self, x):
+class Snake(object):
+    def __init__(self, segment_lengths):
         print "Construct!"
-        self.x = x
+        self.lengths = [int(sl) for sl in segment_lengths]
 
     def print_me(self):
-        print self.x
+        print self.lengths
 
 def main(args):
     print "Welcome to the Cube Solver!!!"
     print args
-    s = Shape(args[0])
+    s = Snake(args)
     s.print_me()
 
 if __name__ == "__main__":
