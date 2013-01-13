@@ -16,6 +16,7 @@ covers exactly the target shape. '''
 
 import json
 import sys
+import draw
 
 
 class Direction(object):
