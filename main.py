@@ -110,9 +110,19 @@ class Shape(object):
         print "Construct!"
         self.length = length
         self.width = width
+        self.coordinatesW = set(itertools.product(range(self.width), range(self.length))) 
+        self.coordinatesL = set(itertools.product(range(self.length), range(self.width))) 
+
 
     def __str__(self):
         return 'Shape(len = {0}, wid = {1})'.format(self.length, self.width)
+
+    def compare(self, conf):
+        ''' Compare configuration and shape. Returns True if they match.'''
+
+        conf = makeCanonical(conf)
+        return (conf == self.coordinatesW) or (conf == self.coordinatesL)
+
 
 
 
@@ -126,6 +136,7 @@ def main(args):
     s = Snake(puzzle["snake"])
     dims = puzzle["shape"]
     rectangle = Shape(dims["len"], dims["wid"])
+
     print(rectangle)
     N = len(s.lengths)
     # HACK!
@@ -133,11 +144,24 @@ def main(args):
     for  turns in itertools.product([Rotation.CLOCKWISE,Rotation.COUNTER],repeat = N-1):
         try:
             conf = s.configuration(list(turns))
-            draw.draw_configuration(conf, rectangle)
+            if rectangle.compare(conf):
+                draw.draw_configuration(makeCanonical(conf), rectangle)
+            # check whether configuration and shape match
+            # if so interrupt, draw, return sequence of turns
+
+
         except OverlapException:
             pass
 
 
+
+#def testCompare():
+
+#def testMakeCanonical():
+
+
 if __name__ == "__main__":
+#    testCompare()
+#    testMakeCanonical()
     main(sys.argv[1:])
 
