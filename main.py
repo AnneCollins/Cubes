@@ -86,6 +86,20 @@ class Snake(object):
 
         return conf
 
+def makeCanonical(conf):
+    '''takes a configuration, returns the same configuration translated so that it fits in
+    the top right quadrant'''
+    xs = [point[0] for point in conf]
+    ys = [point[1] for point in conf]
+
+    mx = min(xs)
+    xs = [x - mx for x in xs]
+
+    my = min(ys)
+    ys = [y - my for y in ys]
+
+    return set(zip(xs, ys))
+
 
 
 class OverlapException(Exception):
