@@ -14,10 +14,11 @@ by width and length.  We want to orient the segments of the snake so that it
 covers exactly the target shape. '''
 
 
+import itertools
 import json
 import sys
-import draw
 
+import draw
 
 class Rotation(object):
     CLOCKWISE = -1
@@ -76,7 +77,7 @@ class Snake(object):
                 next = d.step(head)
                 print "Head is {1}, Next is {0}, dir={2} turn={3}".format(next, head, d, turn)
                 if next in conf:
-                    raise Overlap('Overlap at {0}'.format(next))
+                    raise OverlapException('Overlap at {0}'.format(next))
 
                 conf.add(next)
                 head = next
@@ -87,7 +88,7 @@ class Snake(object):
 
 
 
-class Overlap(Exception):
+class OverlapException(Exception):
     pass
 
 class Shape(object):
@@ -102,6 +103,7 @@ class Shape(object):
 
 
 def main(args):
+
     print "Welcome to the Cube Solver!!!"
     print args
 
@@ -113,9 +115,13 @@ def main(args):
     print(rectangle)
     N = len(s.lengths)
     # HACK!
-    turns = [(-1)**i for i in range(N-1)]
-    conf = s.configuration(turns)
-    draw.draw_configuration(conf, rectangle)
+
+    for  turns in itertools.product([Rotation.CLOCKWISE,Rotation.COUNTER],repeat = N-1):
+        try:
+            conf = s.configuration(list(turns))
+            draw.draw_configuration(conf, rectangle)
+        except OverlapException:
+            pass
 
 
 if __name__ == "__main__":
