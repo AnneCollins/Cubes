@@ -1,6 +1,6 @@
 from matplotlib import pyplot as plt
 import matplotlib
-from main import Direction
+from direction import Direction
 
 
 def draw_configuration(pts, target):
