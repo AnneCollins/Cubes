@@ -24,28 +24,67 @@ class Rotation(object):
     CLOCKWISE = -1
     COUNTER = 1
 
+    R3D1 = 1
+    R3D2 = 2
+    R3D3 = 3
+    R3D4 = 4
+
 class Direction(object):
-    def __init__(self, dx, dy):
+    def __init__(self, dx, dy, dz):
         self.dx = dx
         self.dy = dy
+        self.dz = dz
 
     def step(self, point):
         #returns a new point after taking a step in current direction
-        newpoint = (point[0] + self.dx, point[1] + self.dy)
+        newpoint = (point[0] + self.dx, point[1] + self.dy, point[2] + self.dz)
         return newpoint
 
 
     def turn(self, angle):
         #changes internal direction, returns nothing
-        print "Turn: " , self, angle
-        if angle == Rotation.CLOCKWISE:
-            self.dx, self.dy = self.dy, -self.dx
-        else:
-            self.dx, self.dy = - self.dy, self.dx
-        print "result: ", self
+        #print "Turn: " , self, angle
+
+        if self.dx ==1 or self.dx == -1:
+            if angle == 1:
+                self.dx, self.dy, self.dz = 0, self.dx, 0
+            elif angle == 2:
+                self.dx, self.dy, self.dz = 0, 0, -self.dx
+            elif angle == 3:
+                self.dx, self.dy, self.dz = 0, -self.dx, 0
+            else:
+                self.dx, self.dy, self.dz = 0, 0, self.dx
+
+        elif self.dy == 1 or self.dy == -1:
+            if angle == 1:
+                self.dx, self.dy, self.dz = self.dy, 0, 0
+            elif angle == 2:
+                self.dx, self.dy, self.dz = 0, 0, -self.dy
+            elif angle == 3:
+                self.dx, self.dy, self.dz = -self.dy, 0, 0
+            else:
+                self.dx, self.dy, self.dz = 0, 0, self.dy
+
+        elif self.dz == 1 or self.dz == -1:
+            if angle == 1:
+                self.dx, self.dy, self.dz = self.dz, 0, 0
+            elif angle == 2:
+                self.dx, self.dy, self.dz = 0, self.dz, 0
+            elif angle == 3:
+                self.dx, self.dy, self.dz = -self.dz, 0, 0
+            else:
+                self.dx, self.dy, self.dz = 0, -self.dz, 0
+
+
+
+        #if angle == Rotation.CLOCKWISE:
+        #    self.dx, self.dy = self.dy, -self.dx
+        #else:
+        #    self.dx, self.dy = - self.dy, self.dx
+        #print "result: ", self
 
     def __str__(self):
-        return "Direction({0},{1})".format(self.dx, self.dy)
+        return "Direction({0},{1},{2})".format(self.dx, self.dy, self.dz)
 
 
 
@@ -67,15 +106,16 @@ class Snake(object):
             [length-1,0]), then turns specify left or right turns.
 
         '''
-        head = (0, 0)
+        head = (0, 0, 0)
         conf = set([head])
-        d = Direction(1,0)
+        d = Direction(1, 0, 0)
 
         #step first, then turn (so dummy turn at the end doesn't matter)
         for length, turn in zip(self.lengths, turns+[Rotation.CLOCKWISE]):
             for step in range(length):
                 next = d.step(head)
-                print "Head is {1}, Next is {0}, dir={2} turn={3}".format(next, head, d, turn)
+
+                #print "Head is {1}, Next is {0}, dir={2} turn={3}".format(next, head, d, turn)
                 if next in conf:
                     raise OverlapException('Overlap at {0}'.format(next))
 
@@ -91,6 +131,7 @@ def makeCanonical(conf):
     the top right quadrant'''
     xs = [point[0] for point in conf]
     ys = [point[1] for point in conf]
+    zs = [point[2] for point in conf]
 
     mx = min(xs)
     xs = [x - mx for x in xs]
@@ -98,7 +139,15 @@ def makeCanonical(conf):
     my = min(ys)
     ys = [y - my for y in ys]
 
-    return set(zip(xs, ys))
+    mz = min(zs)
+    zs = [z - mz for z in zs]
+
+    diameter = max([max(zs), max(xs),max(ys)]);
+    if diameter<4:
+
+        print("Diameter is {0}".format(diameter))
+
+    return set(zip(xs, ys, zs))
 
 
 
@@ -106,22 +155,26 @@ class OverlapException(Exception):
     pass
 
 class Shape(object):
-    def __init__(self, length, width):
-        print "Construct!"
+    def __init__(self, length, width, depth):
+        #print "Construct!"
         self.length = length
         self.width = width
-        self.coordinatesW = set(itertools.product(range(self.width), range(self.length))) 
-        self.coordinatesL = set(itertools.product(range(self.length), range(self.width))) 
+        self.depth = depth
+        # HACK! check more possible rotations of the shape
+        self.coordinatesW = set(itertools.product(range(self.width), range(self.length), range(self.depth))) 
+        self.coordinatesL = set(itertools.product(range(self.length), range(self.depth), range(self.width))) 
+        self.coordinatesD = set(itertools.product(range(self.depth), range(self.width), range(self.length))) 
 
 
     def __str__(self):
-        return 'Shape(len = {0}, wid = {1})'.format(self.length, self.width)
+        return 'Shape(len = {0}, wid = {1}), dep = {2}'.format(self.length, self.width, self.depth)
 
     def compare(self, conf):
         ''' Compare configuration and shape. Returns True if they match.'''
 
         conf = makeCanonical(conf)
-        return (conf == self.coordinatesW) or (conf == self.coordinatesL)
+        #print(conf)
+        return (conf == self.coordinatesW) or (conf == self.coordinatesL) or (conf == self.coordinatesD)
 
 
 
@@ -135,17 +188,25 @@ def main(args):
 
     s = Snake(puzzle["snake"])
     dims = puzzle["shape"]
-    rectangle = Shape(dims["len"], dims["wid"])
+    rectangle = Shape(dims["len"], dims["wid"], dims["dep"])
 
-    print(rectangle)
+    #print(rectangle)
     N = len(s.lengths)
     # HACK!
 
-    for  turns in itertools.product([Rotation.CLOCKWISE,Rotation.COUNTER],repeat = N-1):
+
+    result = 'fail'
+    successfulturns = 0
+    for  turns in itertools.product([1, 2, 3, 4],repeat = N-1):
+        #print(turns)
         try:
             conf = s.configuration(list(turns))
             if rectangle.compare(conf):
-                draw.draw_configuration(makeCanonical(conf), rectangle)
+                print('here is a sequence of turns that solves the puzzle: ')
+                print(turns)
+                result = success
+                successfulturns = turns
+#                draw.draw_configuration(makeCanonical(conf), rectangle)
             # check whether configuration and shape match
             # if so interrupt, draw, return sequence of turns
 
@@ -154,6 +215,8 @@ def main(args):
             pass
 
 
+    print(successfulturns)
+    print(result)
 
 #def testCompare():
 
