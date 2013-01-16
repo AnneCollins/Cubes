@@ -19,74 +19,7 @@ import json
 import sys
 
 import draw
-
-class Rotation(object):
-    CLOCKWISE = -1
-    COUNTER = 1
-
-    R3D1 = 1
-    R3D2 = 2
-    R3D3 = 3
-    R3D4 = 4
-
-class Direction(object):
-    def __init__(self, dx, dy, dz):
-        self.dx = dx
-        self.dy = dy
-        self.dz = dz
-
-    def step(self, point):
-        #returns a new point after taking a step in current direction
-        newpoint = (point[0] + self.dx, point[1] + self.dy, point[2] + self.dz)
-        return newpoint
-
-
-    def turn(self, angle):
-        #changes internal direction, returns nothing
-        #print "Turn: " , self, angle
-
-        if self.dx ==1 or self.dx == -1:
-            if angle == 1:
-                self.dx, self.dy, self.dz = 0, self.dx, 0
-            elif angle == 2:
-                self.dx, self.dy, self.dz = 0, 0, -self.dx
-            elif angle == 3:
-                self.dx, self.dy, self.dz = 0, -self.dx, 0
-            else:
-                self.dx, self.dy, self.dz = 0, 0, self.dx
-
-        elif self.dy == 1 or self.dy == -1:
-            if angle == 1:
-                self.dx, self.dy, self.dz = self.dy, 0, 0
-            elif angle == 2:
-                self.dx, self.dy, self.dz = 0, 0, -self.dy
-            elif angle == 3:
-                self.dx, self.dy, self.dz = -self.dy, 0, 0
-            else:
-                self.dx, self.dy, self.dz = 0, 0, self.dy
-
-        elif self.dz == 1 or self.dz == -1:
-            if angle == 1:
-                self.dx, self.dy, self.dz = self.dz, 0, 0
-            elif angle == 2:
-                self.dx, self.dy, self.dz = 0, self.dz, 0
-            elif angle == 3:
-                self.dx, self.dy, self.dz = -self.dz, 0, 0
-            else:
-                self.dx, self.dy, self.dz = 0, -self.dz, 0
-
-
-
-        #if angle == Rotation.CLOCKWISE:
-        #    self.dx, self.dy = self.dy, -self.dx
-        #else:
-        #    self.dx, self.dy = - self.dy, self.dx
-        #print "result: ", self
-
-    def __str__(self):
-        return "Direction({0},{1},{2})".format(self.dx, self.dy, self.dz)
-
-
+from direction import Direction, Rotation
 
 class Snake(object):
     def __init__(self, segment_lengths):
@@ -144,8 +77,8 @@ def makeCanonical(conf):
 
     diameter = max([max(zs), max(xs),max(ys)]);
     if diameter<4:
-
-        print("Diameter is {0}".format(diameter))
+        pass
+        #print("Diameter is {0}".format(diameter))
 
     return set(zip(xs, ys, zs))
 
@@ -178,33 +111,23 @@ class Shape(object):
 
 
 
-
-def main(args):
-
-    print "Welcome to the Cube Solver!!!"
-    print args
-
-    puzzle = json.load(open(args[0]))
-
-    s = Snake(puzzle["snake"])
-    dims = puzzle["shape"]
-    rectangle = Shape(dims["len"], dims["wid"], dims["dep"])
+def solve(rectangle, snake):
 
     #print(rectangle)
-    N = len(s.lengths)
+    N = len(snake.lengths)
     # HACK!
 
 
-    result = 'fail'
+    result = False
     successfulturns = 0
     for  turns in itertools.product([1, 2, 3, 4],repeat = N-1):
         #print(turns)
         try:
-            conf = s.configuration(list(turns))
+            conf = snake.configuration(list(turns))
             if rectangle.compare(conf):
                 print('here is a sequence of turns that solves the puzzle: ')
                 print(turns)
-                result = success
+                result = True
                 successfulturns = turns
 #                draw.draw_configuration(makeCanonical(conf), rectangle)
             # check whether configuration and shape match
@@ -216,7 +139,35 @@ def main(args):
 
 
     print(successfulturns)
-    print(result)
+    return result
+
+
+def load_puzzle(puzzle):
+
+    s = Snake(puzzle["snake"])
+    dims = puzzle["shape"]
+    rectangle = Shape(dims["len"], dims["wid"], dims["dep"])
+    return rectangle, s
+
+
+
+def main(args):
+
+    print "Welcome to the Cube Solver!!!"
+    print args
+
+    puzzle = json.load(open(args[0]))
+
+    rectangle, s = load_puzzle(puzzle)
+
+    result = solve(rectangle, s)
+
+    if result:
+        print 'puzzle solved'
+    else:
+        print 'failed to solve puzzle'
+
+
 
 #def testCompare():
 
